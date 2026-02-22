@@ -45,6 +45,7 @@ The analysis focuses on proportional metrics over absolute counts to identify st
 - `figures/` – Exported visualisation
 
 # Repository Structure
+```text
 ireland-commuting-analysis/
 │
 ├── commuting_analysis.qmd
@@ -54,7 +55,6 @@ ireland-commuting-analysis/
 │   ├── travel_volume_by_mode.png
 │   ├── mode_share_gender_activity.png
 │   ├── education_cohort_travel_patterns.png
-│
 └── README.md
 
 ## Data Source
