@@ -1,0 +1,490 @@
+---
+title: "36-Year Analysis of Commuting Patterns in Ireland (1986–2022)"
+author: "Claire Mac Donagh"
+format:
+  pdf:
+    embed-resources: true
+    geometry:
+    - top=18mm,
+    - left=15mm,
+    - right=15mm,
+    - bottom=18mm
+    - heightrounded
+editor: visual
+---
+
+# Project Overview
+
+Over the past three decades, transport infrastructure, urban development and sustainability priorities have evolved significantly in Ireland.
+
+This project analyses Irish Census commuting data (1986–2022) to understand:
+
+- How commuting behaviour has changed over time
+- Whether private car dependency has increased
+- How commuting patterns differ by gender
+- How travel behaviour varies across work and education
+
+The goal was to move beyond simple population growth trends and identify structural behavioural changes in transport use.
+
+## Data source
+
+**Dataset:** F7122 - Persons Usually Resident and Present in the State
+
+**Source:** Central Statistics Office (CSO), Ireland, https://data.cso.ie
+
+**Time span:** 1986 - 2022
+
+Classified by:
+
+1. Census Year
+2. Sex
+3. Means of Travel
+4. At Work, Childcare, School or College
+
+## Tools Used
+
+- R
+- dplyr
+- ggplot2
+- tidyr
+- scales
+- purrr
+
+## Analytical approach
+
+To ensure meaningful comparisons across decades, the analysis focused primarily on proportional measures, not absolute counts. Population growth alone would inflate raw numbers across all travel modes. Therefore, modal share (%) was used to identify real behavioural shifts.
+
+Data preparation included:
+
+- Cleaning variable names
+- Converting variables to appropriate types
+- Removing non-informative categories
+- Reordering travel modes for interpretability
+- Creating grouped categories
+
+```{r}
+#| label: load-data
+#| warning: false
+#| echo: false
+
+library(rio)
+library(dplyr)
+library(skimr)
+library(ggplot2)
+library(knitr)
+library(tidyr)
+library(scales)
+library(stringr)
+library(purrr)
+
+# Import the CSV dataset file
+dataset <- import("F7122.20251208T011231.csv")
+```
+
+```{r}
+#| label: clean-variable-names
+#| echo: false
+
+# Rename all variables
+commute <- dataset |>
+  rename(
+    statistic = `Statistic Label`,
+    year = CensusYear,
+    sex = Sex,
+    travel = `Means of Travel`,
+    activity = `At Work, Childcare, School or College`,
+    unit = UNIT,
+    value = VALUE
+)
+```
+
+```{r}
+#| label: convert-variable-types
+#| echo: false
+
+# Convert variables
+commute <- commute |>
+  mutate(year = as.integer(year),
+         value = as.numeric(value),
+         statistic = as.factor(statistic),
+         sex = as.factor(sex),
+         travel = as.factor(travel),
+         activity = as.factor(activity),
+         unit = as.factor(unit)
+)
+```
+
+```{r}
+#| label: check-missing-values
+#| echo: false
+
+# Print dataset overview - the dataset contains no missing values.
+#skim_without_charts(commute)
+```
+
+```{r}
+#| label: remove-non-informative-variables
+#| results: hide
+#| echo: false
+
+# The summary shows that the variables *statistic* and *unit* contain only a single unique value ("*Persons Usually Resident and Present in the State*" and "*Number*" respectively).
+
+# Remove selected variables
+commute <- commute |>
+  select(-statistic, -unit)
+```
+
+```{r}
+#| label: remove-non-informative-categories
+#| echo: false
+
+# Filtered out the *All means of travel* and *Not stated* entries to focus on specific travel groups.
+
+# Remove rows with unwanted travel categories
+commute <- commute |>
+  filter(travel != "Not stated",
+         travel != "All means of travel")
+```
+
+```{r}
+#| label: reorder-transport-category
+#| echo: false
+
+# Reorder travel modes for plotting
+commute$travel <- factor(
+  commute$travel,
+  levels = c(
+    "On foot", 
+    "Bicycle", 
+    "Bus, minibus or coach", 
+    "Train, DART or LUAS", 
+    "Motorcycle or scooter",
+    "Motor car: Passenger",
+    "Motor car: Driver", 
+    "Other means (incl. lorry or van)"
+  )
+)
+```
+
+
+# Key Findings
+
+```{r}
+#| label: global-theme
+#| include: false
+#| echo: false
+
+# Define a global ggplot2 theme for consistent figure styling
+# Chunk is hidden to maintain report flow 
+# Minimal style, bold titles, legends on the bottom and reduced grid clutter
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      plot.title = element_text(face = "bold"),
+      legend.position = "bottom",
+      panel.grid.minor = element_blank()
+    )
+)
+```
+
+## 1. Structural Shift Toward Private Motor Transport
+
+```{r}
+#| label: figure-1
+#| fig-cap: "Workers Shift from Sustainable to Private Motor Transport (1986–2022)."
+#| out-width: 100%
+#| fig-height: 4
+#| fig-width: 6
+#| echo: false
+
+# Filter to only workers
+commute_workers <- commute |>
+  filter(activity == "Population aged 15 years and over at work")
+
+# Define sustainable vs private motor categories
+workers_transport_groups <- commute_workers |>
+  mutate(
+    transport_group = ifelse(
+      travel %in% c("On foot" , "Bicycle" , "Bus, minibus or coach" , 
+                    "Train, DART or LUAS" ), 
+      "Sustainable", 
+      ifelse(
+        travel %in% c("Motorcycle or scooter" , "Motor car: Driver" , 
+                      "Motor car: Passenger" , 
+                      "Other means (incl. lorry or van)"), 
+        "Private Motor", 
+        NA) ) ) |>
+  filter(!is.na(transport_group)) |>
+  mutate(transport_group = factor(transport_group,
+                                  levels = c("Sustainable", "Private Motor")))
+
+# Summarise total workers per year per transport group
+workers_transport_groups <- workers_transport_groups |>
+  group_by(year, transport_group) |>
+  summarise(
+    total_value = sum(value),
+    .groups = "drop"
+  )
+
+# Calculate proportional share of all worker trips per year
+workers_transport_groups <- workers_transport_groups |>
+  group_by(year) |>
+  mutate(
+    year_total = sum(total_value),
+    percentage = total_value / year_total
+  ) |>
+  ungroup()
+
+# Line graph
+ggplot(workers_transport_groups,
+       aes(x = year, y = percentage, colour = transport_group)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2.5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_x_continuous(breaks = sort(unique(workers_transport_groups$year))) +
+  labs(
+    title = "Workers Using Sustainable vs Private Motor Transport",
+    subtitle = "Proportional modal share, 1986–2022",
+    x = "Census Year",
+    y = "Proportion of Workers",
+    colour = "Transport Type"
+  )
+  
+ggsave("figure-1.png")
+```
+
+
+**KPI: Worker Modal Share (Private vs Sustainable)**
+
+Between 1986 and 2011:
+
+- Private motor transport increased from **~64% to nearly 80%**
+- Sustainable transport declined from **~36% to just over 20%**
+
+After 2011, the trend stabilised but did not reverse.
+
+**Insight:**
+
+Ireland has experienced a long-term structural shift toward car dependency, particularly for work-related commuting.
+
+This has significant implications for:
+
+- Climate policy
+- Urban planning
+- Public transport investment
+- Sustainable mobility strategies
+
+## 2. Growth in Car Driving as Primary Mode
+
+```{r}
+#| label: figure-2
+#| fig-cap: "Total Number of People by Means of Travel Across Census Years (1986–2022)."
+#| out-width: 100%
+#| fig-height: 5
+#| fig-width: 8
+#| echo: false
+
+# Focus only on "All persons" to show total volume per travel mode
+year_travel <- commute |>
+  filter(activity == "All persons") |>
+  group_by(year, travel) |>
+  summarise(
+    total_value = sum(value),
+    .groups = "drop"
+)
+
+# Line graph
+ggplot(year_travel,
+       aes(x = year, y = total_value, colour = travel, group = travel)) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  scale_x_continuous(breaks = sort(unique(year_travel$year))) +
+  scale_y_continuous(labels = comma) + 
+  labs(
+    title = "Total Number of People by Means of Travel Across Census Years",
+    x = "Census Year",
+    y = "Number of People",
+    colour = "Means of travel"
+    )
+ggsave("figure-2.png")
+```
+
+{{< pagebreak >}}
+
+Although total travel increased across all categories, growth was overwhelmingly driven by: *Motor car: Driver*
+
+This indicates that increased travel volume is not merely demographic - it reflects a behavioural shift toward independent car use.
+
+## 3. Gender Differences in Commuting
+
+```{r}
+#| label: figure-3
+#| fig-cap: "Proportional Mode by Gender Across Work and School/College Activities (1986–2022)."
+#| out-width: 100%
+#| fig-height: 6
+#| fig-width: 8
+#| echo: false
+
+# Filter to the two activity groups of interest and remove 'Both sexes'
+gender_activity <- commute |>
+  mutate(
+    activity_group = ifelse(
+      activity == "Population aged 15 years and over at work", 
+      "Work", 
+      ifelse(
+        activity %in% c(
+          "Children at school or childcare aged between 0 and 4 years", 
+          "Children at school aged between 5 and 12 years", 
+          "Students at school or college aged between 13 and 18 years",
+          "Students at school or college aged 19 years and over"),
+        "School/College", 
+        NA) ) ) |>
+  filter(!is.na(activity_group)) |>
+  filter(sex != 'Both sexes') |>
+  mutate(activity_group = factor(activity_group, levels = c("Work", "School/College")))
+
+# Summarise total commuters by gender, travel mode and activity
+gender_activity_summary <- gender_activity |> 
+  group_by(activity_group, sex, travel) |>
+  summarise(
+    total_value = sum(value),
+    .groups = "drop"
+    )
+
+# Calculate proportional mode share within each sex and activity group
+gender_activity_prop <- gender_activity_summary |>
+  group_by(activity_group, sex) |>
+  mutate(prop = total_value / sum(total_value))
+
+# Bar chart
+ggplot(gender_activity_prop,
+       aes(x = travel, y = prop, fill = sex)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~ activity_group, ncol = 1, scales = "free_y") +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Proportional Mode Share by Gender and Activity",
+    x = "Means of Travel",
+    y = "Proportion of Commuters",
+    fill = "Sex"
+  ) +
+  theme(
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+  )
+ggsave("figure-3.png")
+```
+
+Gender differences exist but are relatively modest overall.
+
+Key patterns:
+
+- Males are more likely to drive
+- Females are slightly more likely to walk or use public transport
+- Cycling and motorcycling remain strongly male-dominated modes
+
+However, differences across activity type (work vs school) are more pronounced than gender differences.
+
+## 4. Education Cohort Travel Patterns (Lifecycle Effect)
+
+```{r}
+#| label: figure-4
+#| fig-cap: "Active Travel Modal Share Across Specific Education Cohorts (Aggregated 1986–2022)."
+#| out-width: 100%
+#| fig-height: 6
+#| fig-width: 8
+#| echo: false
+
+# Define subset of activity groups
+education_activities <- c(
+    "Children at school or childcare aged between 0 and 4 years",
+    "Children at school aged between 5 and 12 years",
+    "Students at school or college aged between 13 and 18 years",
+    "Students at school or college aged 19 years and over"
+)
+
+# Filter the data to focus on selected education groups and travel modes
+commute_purrr <- commute |>
+  filter(activity %in% education_activities) |>
+  filter(travel %in% c("On foot",
+                       "Bicycle",
+                       "Motor car: Driver",
+                       "Motor car: Passenger")) |>
+  select(activity, travel, value)
+
+# Define a function to calculate modal proportions within a cohort
+modal_split <- function(data) {
+  data |>
+    group_by(travel) |>
+    summarise(total_value = sum(value), .groups = "drop") |>
+    mutate(proportion = total_value / sum(total_value))
+}
+
+# Apply map_dfr() to compute modal shares for each activity group
+modal_splits_df <- commute_purrr |>
+  split(~ activity) |>
+  map_dfr(modal_split, .id = "activity")
+
+# Simplify labels for the plot
+modal_splits_df$activity_short <- factor(modal_splits_df$activity, 
+                                          levels = education_activities,
+                                          labels = c("0–4 years (Childcare)",
+                                                     "5–12 years (Primary)",
+                                                     "13–18 years (Secondary)",
+                                                     "19+ years (College)"))
+
+# Plot bar charts
+ggplot(modal_splits_df,
+       aes(x = travel, y = proportion, fill = travel)) +
+  geom_col() +
+  facet_wrap(~ activity_short, ncol = 2) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "Focus on Active vs Car Travel for Each Education Cohort",
+    subtitle = "Proportional Modal Share, 1986-2022",
+    x = "Means of Travel",
+    y = "Proportion of Total Travel",
+    fill = "Travel Mode"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("figure-4.png")
+```
+
+Travel behaviour varies significantly by age group:
+
+| Age Group     | Dominant Mode               | Key patterns                      |
+|---------------|-----------------------------|-----------------------------------|
+| 0-4 years     | Car Passenger               | Heavy reliance on escorted travel |
+| 5-12 years    | Car Passenger + Walking     | Increase in active travel         |
+| 13-18 years   | Walking                     | Peak independent active travel    |
+| 19+ years     | Car Driver                  | Transition to independant driving |
+
+**Insight:**
+
+Car dependency begins early and strengthens as individuals gain independence and travel longer distances. 
+
+This suggests long-term behavioural reinforcement of private motor transport.
+
+# What This Project Demonstrates
+
+This analysis showcases the ability to:
+
+- Clean and structure real government datasets
+- Perform longitudinal analysis
+- Use proportional metrics correctly
+- Avoid misleading absolute trends
+- Segment data by demographic group
+- Communicate insights clearly
+- Translate data into policy-relevant conclusions
+
+# Business & Policy Implications
+
+The sustained dominance of private motor transport suggests:
+
+- Infrastructure investment in sustainable transport may not yet be sufficient to reverse long-term trends
+- Behavioural change requires structural incentives, not short-term interventions
+- Urban design and land-use planning play a major role in commuting behaviour
+
+This analysis highlights the complexity of achieving modal shift toward sustainable mobility.
+
