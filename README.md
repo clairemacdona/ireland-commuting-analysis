@@ -13,16 +13,16 @@ The analysis focuses on proportional metrics over absolute counts to identify st
 ## Visualisations
 
 ### Modal Share Shift (1986–2022)
-![Modal Share Shift](./figures/modal_share_shift_1986_2022.png)
+![Modal Share Shift](figures/modal_share_shift_1986_2022.png)
 
 ### Travel Volume by Mode
-![Travel Volume by Mode](./figures/travel_volume_by_mode.png)
+![Travel Volume by Mode](figures/travel_volume_by_mode.png)
 
 ### Mode Share by Gender & Activity
-![Mode Share by Gender & Activity](./figures/mode_share_gender_activity.png)
+![Mode Share by Gender & Activity](figures/mode_share_gender_activity.png)
 
 ### Education Cohort Travel Patterns
-![Education Cohort Travel Patterns](./figures/education_cohort_travel_patterns.png)
+![Education Cohort Travel Patterns](figures/education_cohort_travel_patterns.png)
 
 ## Tools Used
 - R
@@ -42,6 +42,7 @@ The analysis focuses on proportional metrics over absolute counts to identify st
 ## Files Included
 - `commuting_analysis.qmd` – Full Quarto analysis document
 - `commuting_patterns.pdf` – Rendered project report
+- `F7122.20251208T011231.csv` - Dataset
 - `figures/` – Exported visualisation
 
 # Repository Structure
@@ -50,6 +51,7 @@ ireland-commuting-analysis/
 │
 ├── commuting_analysis.qmd
 ├── commuting_patterns.pdf
+├── F7122.20251208T011231.csv
 ├── figures/
 │   ├── modal_share_shift_1986_2022.png
 │   ├── travel_volume_by_mode.png
