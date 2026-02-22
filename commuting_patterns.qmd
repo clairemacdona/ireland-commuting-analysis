@@ -250,7 +250,7 @@ ggplot(workers_transport_groups,
     colour = "Transport Type"
   )
   
-ggsave("figure-1.png")
+ggsave("modal_share_shift_1986_2022.png")
 ```
 
 
@@ -306,7 +306,7 @@ ggplot(year_travel,
     y = "Number of People",
     colour = "Means of travel"
     )
-ggsave("figure-2.png")
+ggsave("travel_volume_by_mode.png")
 ```
 
 {{< pagebreak >}}
@@ -372,7 +372,7 @@ ggplot(gender_activity_prop,
     legend.position = "bottom",
     axis.text.x = element_text(angle = 45, hjust = 1),
   )
-ggsave("figure-3.png")
+ggsave("mode_share_gender_activity.png")
 ```
 
 Gender differences exist but are relatively modest overall.
@@ -448,7 +448,7 @@ ggplot(modal_splits_df,
   ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave("figure-4.png")
+ggsave("education_cohort_travel_patterns.png")
 ```
 
 Travel behaviour varies significantly by age group:
