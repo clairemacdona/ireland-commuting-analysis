@@ -196,6 +196,7 @@ theme_set(
 #| fig-height: 4
 #| fig-width: 6
 #| echo: false
+#| warning: false
 
 # Filter to only workers
 commute_workers <- commute |>
@@ -253,6 +254,7 @@ ggplot(workers_transport_groups,
 ggsave("modal_share_shift_1986_2022.png")
 ```
 
+{{< pagebreak >}}
 
 **KPI: Worker Modal Share (Private vs Sustainable)**
 
@@ -283,6 +285,7 @@ This has significant implications for:
 #| fig-height: 5
 #| fig-width: 8
 #| echo: false
+#| warning: false
 
 # Focus only on "All persons" to show total volume per travel mode
 year_travel <- commute |>
@@ -324,6 +327,7 @@ This indicates that increased travel volume is not merely demographic - it refle
 #| fig-height: 6
 #| fig-width: 8
 #| echo: false
+#| warning: false
 
 # Filter to the two activity groups of interest and remove 'Both sexes'
 gender_activity <- commute |>
@@ -394,6 +398,7 @@ However, differences across activity type (work vs school) are more pronounced t
 #| fig-height: 6
 #| fig-width: 8
 #| echo: false
+#| warning: false
 
 # Define subset of activity groups
 education_activities <- c(
