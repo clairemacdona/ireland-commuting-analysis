@@ -42,6 +42,7 @@ The analysis focuses on proportional metrics over absolute counts to identify st
 ## Files Included
 - `commuting_analysis.qmd` – Full Quarto analysis document
 - `commuting_patterns.pdf` – Rendered project report
+- `F7122.20251208T011231.csv` - Dataset
 - `figures/` – Exported visualisation
 
 # Repository Structure
@@ -50,6 +51,7 @@ ireland-commuting-analysis/
 │
 ├── commuting_analysis.qmd
 ├── commuting_patterns.pdf
+├── F7122.20251208T011231.csv
 ├── figures/
 │   ├── modal_share_shift_1986_2022.png
 │   ├── travel_volume_by_mode.png
