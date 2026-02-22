@@ -13,16 +13,16 @@ The analysis focuses on proportional metrics over absolute counts to identify st
 ## Visualisations
 
 ### Modal Share Shift (1986–2022)
-![Modal Share Shift](figures/modal_share_shift_1986_2022.png)
+![Modal Share Shift](./figures/modal_share_shift_1986_2022.png)
 
 ### Travel Volume by Mode
-![Travel Volume by Mode](figures/travel_volume_by_mode.png)
+![Travel Volume by Mode](./figures/travel_volume_by_mode.png)
 
 ### Mode Share by Gender & Activity
-![Mode Share by Gender & Activity](figures/mode_share_gender_activity.png)
+![Mode Share by Gender & Activity](./figures/mode_share_gender_activity.png)
 
 ### Education Cohort Travel Patterns
-![Education Cohort Travel Patterns](figures/education_cohort_travel_patterns.png)
+![Education Cohort Travel Patterns](./figures/education_cohort_travel_patterns.png)
 
 ## Tools Used
 - R
@@ -56,6 +56,7 @@ ireland-commuting-analysis/
 │   ├── mode_share_gender_activity.png
 │   ├── education_cohort_travel_patterns.png
 └── README.md
+```
 
 ## Data Source
 Irish Census of Population, 1986–2022. Available at [Central Statistics Office](https://www.cso.ie/).
